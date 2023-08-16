@@ -1,0 +1,54 @@
+
+1. rip diffing
+
+first of all make sure with this diffing the banches and paths are ok
+
+
+scemu execution-path log:
+target/release/scemu -f /bin/ls -6 --reg rip | grep rip > /tmp/scemu.log
+
+
+gdb execution-path log:
+gdb /bin/ls
+source scemu.py
+b _start
+r
+logrip
+
+(takes time)
+
+python3 diff2.py
+
+...
+1110  0x7ffff7feb671 0x7ffff7feb671
+1111  0x7ffff7feb673 0x7ffff7feb673
+1112  0x7ffff7feb677 0x7ffff7feb677
+1113  0x7ffff7feb67b 0x7ffff7feb67b
+1114  0x7ffff7feb67d 0x7ffff7feb673
+
+
+this means that until 1113 all the path is ok
+
+1112 0x7ffff7feb677: cmp   qword ptr [rax],0
+1113 0x7ffff7feb67b: jne   short 00007FFFF7FEB673h
+
+Then use the "goto" gdb plugin go to 1112
+
+(gdb) goto 1111
+(gdb) x/i $pc
+
+
+(gdb) x/i $pc
+=> 0x7ffff7feb677 <_dl_sysdep_start+71>:	cmp    QWORD PTR [rax],0x0
+(gdb) i r rax
+rax            0x7fffffffe2d0      140737488347856
+
+--- console ---
+=>r rax
+	rax: 0x7fffffffe280 140737488347776 (stack)
+
+rax is not ok.
+
+Now is necesasry to do a register diffing
+
+2. reg diffing

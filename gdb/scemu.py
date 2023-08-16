@@ -90,6 +90,9 @@ class StepAndPrintRegisters(gdb.Command):
 
         fd.write(f"\tzf: {zf} pf: {pf} af: {af} of: {of} sf: {sf} df: {df} cf: {cf} tf: {tf} if: {if_flag} nt: {nt}\n")
         print(f"\tzf: {zf} pf: {pf} af: {af} of: {of} sf: {sf} df: {df} cf: {cf} tf: {tf} if: {if_flag} nt: {nt}")
+
+        nemonic = gdb.execute("x/i $pc", to_string=True) #.strip()
+        fd.write(f'\t{nemonic}\n')
         fd.close()
         #instruction = gdb.execute("x/i $pc", to_string=True)
         #print(instruction)
@@ -121,6 +124,67 @@ class Stepper(gdb.Command):
 
 
 
+class LogRIP(gdb.Command):
+    def __init__(self):
+        super().__init__("logrip", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        while True:
+            self.print_registers()
+            gdb.execute("stepi", to_string=True)
+
+    def get_reg(self, regname):
+        frame = gdb.selected_frame()
+        reg = frame.read_register(regname)
+        reg = reg.cast(gdb.lookup_type('long long'))
+        if reg == -64:
+            return hex(0xffffffffffffffc0)
+
+        reg = ctypes.c_int64(reg).value
+
+        if reg < 0:
+            reg2 = (reg + (2 ** 64)) & 0xffffffffffffffff
+        else:
+            reg2 = reg
+
+        return hex(reg2)
+
+
+    def print_registers(self):
+        rip = self.get_reg('rip')
+        open('/tmp/gdb.log','a').write(rip+'\n')
+
+
+
+class Track(gdb.Command):
+    def __init__(self):
+        super().__init__("track", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        while True:
+            self.print_register(arg)
+            gdb.execute("stepi", to_string=True)
+
+    def get_reg(self, regname):
+        frame = gdb.selected_frame()
+        reg = frame.read_register(regname)
+        reg = reg.cast(gdb.lookup_type('long long'))
+        if reg == -64:
+            return hex(0xffffffffffffffc0)
+
+        reg = ctypes.c_int64(reg).value
+
+        if reg < 0:
+            reg2 = (reg + (2 ** 64)) & 0xffffffffffffffff
+        else:
+            reg2 = reg
+
+        return hex(reg2)
+
+
+    def print_register(self, reg):
+        rip = self.get_reg(reg)
+        open('/tmp/gdb.log','a').write(rip+'\n')
 
 
 
@@ -131,6 +195,6 @@ gdb.execute("set pagination off")
 GoToCommand()
 StepAndPrintRegisters()
 Stepper()
-
+LogRIP()
 
 

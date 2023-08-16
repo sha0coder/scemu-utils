@@ -1,0 +1,21 @@
+registers ymm
+
+
+instructions:
+
+21749 0x43bbd3: vmovdqu ymm0,[rsi]
+unimplemented or invalid instruction. use --banzai (cfg.skip_unimplemented) mode to skip
+--- console ---
+=>d
+address=>0x43bbd3
+0x43bbd3: vmovdqu ymm0,[rsi]
+0x43bbd7: vmovdqu ymm1,[rsi+rdx-20h]
+0x43bbdd: vmovdqu [rdi],ymm0
+0x43bbe1: vmovdqu [rdi+rdx-20h],ymm1
+0x43bbe7: vzeroupper
+0x43bbea: ret
+0x43bbeb: cmp   rdx,[4B51A8h]
+0x43bbf2: jae   000000000043BD33h
+0x43bbf8: cmp   rdi,rsi
+=>
+
